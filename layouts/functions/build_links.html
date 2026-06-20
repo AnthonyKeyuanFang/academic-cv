@@ -1,0 +1,25 @@
+{{/* 修复blox nil map报错：$seen 兜底初始化 */}}
+{{ $page := .page }}
+{{ $isList := .is_list }}
+{{ $links := slice }}
+{{ $seen := .seen | default dict }} {{/* 关键修复行 */}}
+
+{{/* 下方保留原blox全部逻辑，只改上面这一行 */}}
+{{ $allLinks := slice }}
+{{ if $page.Params.links }}
+  {{ $allLinks = $page.Params.links }}
+{{ end }}
+{{ if $page.Params.publications }}
+  {{ $allLinks = $allLinks | append $page.Params.publications }}
+{{ end }}
+
+{{ range $allLinks }}
+  {{ $link := . }}
+  {{ $key := printf "%s-%s" $link.type $link.url }}
+  {{ if not ($seen.Get $key) }}
+    {{ $seen.SetInMap $key true }}
+    {{ $links = $links | append $link }}
+  {{ end }}
+{{ end }}
+
+{{ return dict "links" $links "seen" $seen }}
